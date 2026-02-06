@@ -82,16 +82,56 @@ button {
 
 <body>
 
-<div class="container">
+<div class="container" id="app">
+  <div style="text-align:center; padding:60px 10px; color:#888;">
+    Loading OpenVoice…
+  </div>
+</div>
 
-  <!-- FORM -->
+<script>
+/* ==================================================
+   CLIENT CONFIG  (Scan2Print-style)
+================================================== */
+const CLIENT_CONFIG = {
+  "GVL001": {
+    name: "GVLC COMMUNICATIONS",
+    clientId: "GVL-ISP-001",
+    scriptUrl: "https://script.google.com/macros/s/AKfycbxnVFfCudI6OyZwoGGHG5YNuNJ4EpiePXOBlijtbU8qbQXH6XcSHhfm_NPDbZeUndxTxg/exec"
+  },
+  "FIT001": {
+    name: "FitZone Gym",
+    clientId: "FIT-GYM-001",
+    scriptUrl: ""
+  }
+};
+
+/* ==================================================
+   CLIENT ROUTING
+================================================== */
+const params = new URLSearchParams(window.location.search);
+const clientKey = params.get("client");
+const app = document.getElementById("app");
+
+if (!clientKey || !CLIENT_CONFIG[clientKey]) {
+  app.innerHTML = `
+    <div style="text-align:center; padding:60px 20px;">
+      <h2>Invalid QR Code</h2>
+      <p>This link is not assigned to any client.</p>
+    </div>
+  `;
+  throw new Error("Invalid client");
+}
+
+const CLIENT = CLIENT_CONFIG[clientKey];
+const SCRIPT_URL = CLIENT.scriptUrl;
+
+/* ==================================================
+   RENDER FORM
+================================================== */
+app.innerHTML = `
   <div id="formBox">
-    <h2>OpenVoice</h2>
+    <h2>${CLIENT.name}</h2>
     <div class="sub">Raise a complaint, feedback, or suggestion</div>
-
-    <!-- Hidden Client Info -->
-    <input type="hidden" id="clientName" value="Green Valley Internet">
-    <input type="hidden" id="clientId" value="GVL-ISP-001">
 
     <label>Request Type</label>
     <select id="requestType" onchange="handleType()" required>
@@ -124,19 +164,15 @@ button {
     <button type="button" onclick="submitForm()">Submit</button>
   </div>
 
-  <!-- SUCCESS -->
   <div id="successBox" class="success hidden">
     <h3 id="sTitle"></h3>
     <p id="sMsg"></p>
   </div>
+`;
 
-</div>
-
-<script>
-/* 🔗 Apps Script Web App URL */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwKCsR93mB8PqfUvY1vYZAv2nEqLz1PywEgK8M7h87nqu6o4GQh2zRXiR8P6Zz8C0zd/exec";
-
-/* Handle request type change */
+/* ==================================================
+   LOGIC (UNCHANGED)
+================================================== */
 function handleType() {
   const type = document.getElementById("requestType").value;
   const imgBlock = document.getElementById("imgBlock");
@@ -150,7 +186,6 @@ function handleType() {
     "Share your suggestion";
 }
 
-/* Submit form */
 function submitForm() {
   const type = document.getElementById("requestType").value;
   const name = document.getElementById("userName").value.trim();
@@ -175,14 +210,14 @@ function submitForm() {
     email: email,
     message: message,
     attachments: "",
-    clientName: document.getElementById("clientName").value,
-    clientId: document.getElementById("clientId").value
+    clientName: CLIENT.name,
+    clientId: CLIENT.clientId
   };
 
   fetch(SCRIPT_URL, {
-  method: "POST",
-  body: JSON.stringify(payload)
-})
+    method: "POST",
+    body: JSON.stringify(payload)
+  })
   .then(res => res.json())
   .then(data => {
     if (data.success) {
@@ -191,13 +226,9 @@ function submitForm() {
       alert("Submission failed. Please try again.");
     }
   })
-  .catch(err => {
-    console.error(err);
-    alert("Network error. Please try again.");
-  });
+  .catch(() => alert("Network error. Please try again."));
 }
 
-/* Success screen */
 function showSuccess(type) {
   document.getElementById("formBox").classList.add("hidden");
   document.getElementById("successBox").classList.remove("hidden");
@@ -207,20 +238,16 @@ function showSuccess(type) {
 
   if (type === "Complaint") {
     title.innerText = "✅ Complaint Received";
-    msg.innerText =
-      "Your complaint has been submitted successfully. You will receive updates when it is in progress and resolved.";
+    msg.innerText = "Your complaint has been submitted successfully.";
   } else if (type === "Feedback") {
     title.innerText = "🙏 Thank You for Your Feedback";
-    msg.innerText =
-      "We appreciate you taking the time to share your feedback.";
+    msg.innerText = "We appreciate your feedback.";
   } else {
     title.innerText = "💡 Suggestion Received";
-    msg.innerText =
-      "Thank you for your suggestion. Your ideas help us improve.";
+    msg.innerText = "Thank you for your suggestion.";
   }
 }
 </script>
 
 </body>
-
 </html>
