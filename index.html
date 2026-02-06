@@ -180,10 +180,9 @@ function submitForm() {
   };
 
   fetch(SCRIPT_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  })
+  method: "POST",
+  body: JSON.stringify(payload)
+})
   .then(res => res.json())
   .then(data => {
     if (data.success) {
@@ -223,4 +222,5 @@ function showSuccess(type) {
 </script>
 
 </body>
+
 </html>
