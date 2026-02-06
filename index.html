@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OpenVoice</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  font-family: system-ui, Arial, sans-serif;
+  background: #f6f7f9;
+  padding: 20px;
+}
+
+.container {
+  max-width: 420px;
+  margin: auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.sub {
+  text-align: center;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+label {
+  font-weight: 600;
+  margin-top: 14px;
+  display: block;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+textarea {
+  min-height: 90px;
+}
+
+.helper {
+  font-size: 12px;
+  color: #666;
+}
+
+.hidden {
+  display: none;
+}
+
+button {
+  width: 100%;
+  margin-top: 20px;
+  padding: 12px;
+  border: none;
+  background: #1e88e5;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+/* Success screen */
+.success {
+  text-align: center;
+  padding: 30px 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- FORM -->
+  <div id="formBox">
+    <h2>OpenVoice</h2>
+    <div class="sub">Raise a complaint, feedback, or suggestion</div>
+
+    <!-- Hidden Client Info -->
+    <input type="hidden" id="clientName" value="Green Valley Internet">
+    <input type="hidden" id="clientId" value="GVL-ISP-001">
+
+    <label>Request Type</label>
+    <select id="requestType" onchange="handleType()" required>
+      <option value="">Select</option>
+      <option value="Complaint">Complaint</option>
+      <option value="Feedback">Feedback</option>
+      <option value="Suggestion">Suggestion</option>
+    </select>
+
+    <label>Your Name</label>
+    <input id="userName" type="text" required>
+
+    <label>WhatsApp Number</label>
+    <input id="whatsapp" type="tel" placeholder="9XXXXXXXXX">
+    <div class="helper">
+      At least one contact method required for Complaint & Feedback
+    </div>
+
+    <label>Email Address</label>
+    <input id="email" type="email">
+
+    <label id="msgLabel">Your Message</label>
+    <textarea id="message" required></textarea>
+
+    <div id="imgBlock" class="hidden">
+      <label>Upload Image (optional)</label>
+      <input type="file" id="image" accept="image/*">
+    </div>
+
+    <button type="button" onclick="submitForm()">Submit</button>
+  </div>
+
+  <!-- SUCCESS -->
+  <div id="successBox" class="success hidden">
+    <h3 id="sTitle"></h3>
+    <p id="sMsg"></p>
+  </div>
+
+</div>
+
+<script>
+/* 🔗 Apps Script Web App URL */
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwKCsR93mB8PqfUvY1vYZAv2nEqLz1PywEgK8M7h87nqu6o4GQh2zRXiR8P6Zz8C0zd/exec";
+
+/* Handle request type change */
+function handleType() {
+  const type = document.getElementById("requestType").value;
+  const imgBlock = document.getElementById("imgBlock");
+  const msgLabel = document.getElementById("msgLabel");
+
+  imgBlock.classList.toggle("hidden", type !== "Complaint");
+
+  msgLabel.innerText =
+    type === "Complaint" ? "Describe your issue" :
+    type === "Feedback" ? "Share your feedback" :
+    "Share your suggestion";
+}
+
+/* Submit form */
+function submitForm() {
+  const type = document.getElementById("requestType").value;
+  const name = document.getElementById("userName").value.trim();
+  const whatsapp = document.getElementById("whatsapp").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const message = document.getElementById("message").value.trim();
+
+  if (!type || !name || !message) {
+    alert("Please fill all required fields.");
+    return;
+  }
+
+  if ((type === "Complaint" || type === "Feedback") && !whatsapp && !email) {
+    alert("Please provide WhatsApp or Email.");
+    return;
+  }
+
+  const payload = {
+    requestType: type,
+    name: name,
+    whatsapp: whatsapp,
+    email: email,
+    message: message,
+    attachments: "",
+    clientName: document.getElementById("clientName").value,
+    clientId: document.getElementById("clientId").value
+  };
+
+  fetch(SCRIPT_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      showSuccess(type);
+    } else {
+      alert("Submission failed. Please try again.");
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    alert("Network error. Please try again.");
+  });
+}
+
+/* Success screen */
+function showSuccess(type) {
+  document.getElementById("formBox").classList.add("hidden");
+  document.getElementById("successBox").classList.remove("hidden");
+
+  const title = document.getElementById("sTitle");
+  const msg = document.getElementById("sMsg");
+
+  if (type === "Complaint") {
+    title.innerText = "✅ Complaint Received";
+    msg.innerText =
+      "Your complaint has been submitted successfully. You will receive updates when it is in progress and resolved.";
+  } else if (type === "Feedback") {
+    title.innerText = "🙏 Thank You for Your Feedback";
+    msg.innerText =
+      "We appreciate you taking the time to share your feedback.";
+  } else {
+    title.innerText = "💡 Suggestion Received";
+    msg.innerText =
+      "Thank you for your suggestion. Your ideas help us improve.";
+  }
+}
+</script>
+
+</body>
+</html>
