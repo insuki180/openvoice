@@ -39,7 +39,7 @@ button { width: 100%; margin-top: 20px; padding: 12px; border: none; background:
 <script>
 /* CLIENT CONFIG */
 const CLIENT_CONFIG = {
-  "GVL001": { name: "GVLC COMMUNICATIONS", clientId: "GVL-ISP-001", scriptUrl: "https://script.google.com/macros/s/AKfycbxnVFfCudI6OyZwoGGHG5YNuNJ4EpiePXOBlijtbU8qbQXH6XcSHhfm_NPDbZeUndxTxg/exec" },
+  "GVL001": { name: "GVLC Fibre Net", clientId: "GVL-ISP-001", scriptUrl: "https://script.google.com/macros/s/AKfycbxnVFfCudI6OyZwoGGHG5YNuNJ4EpiePXOBlijtbU8qbQXH6XcSHhfm_NPDbZeUndxTxg/exec" },
   "FIT001": { name: "FitZone Gym", clientId: "FIT-GYM-001", scriptUrl: "" }
 };
 
@@ -60,19 +60,8 @@ app.innerHTML = `
     <h2>${CLIENT.name}</h2>
     <div class="sub">Raise a complaint, feedback, or suggestion</div>
 
-    <label>Request Type <span class="req">*</span></label>
-    <select id="requestType" onchange="handleType()" required>
-      <option value="">Select</option>
-      <option value="Complaint">Complaint</option>
-      <option value="Feedback">Feedback</option>
-      <option value="Suggestion">Suggestion</option>
-    </select>
-
     <label>Your Name <span class="req">*</span></label>
     <input id="userName" type="text" required>
-
-    <label>Location / Area</label>
-    <input id="userLocation" type="text" placeholder="e.g. Street Name, Flat No">
 
     <label>Registered Mobile Number</label>
     <input id="mobile" type="tel" placeholder="Enter your 10-digit number">
@@ -81,12 +70,24 @@ app.innerHTML = `
     <label>Email Address</label>
     <input id="email" type="email">
 
+    <label>Location / Area</label>
+    <input id="userLocation" type="text" placeholder="e.g. Street Name, Flat No">
+
+    <label>Request Type <span class="req">*</span></label>
+    <select id="requestType" onchange="handleType()" required>
+      <option value="">Select</option>
+      <option value="Complaint">Complaint</option>
+      <option value="Suggestion">Suggestion</option>
+      <option value="Feedback">Feedback</option>
+    </select>
+
     <label id="msgLabel">Message <span class="req">*</span></label>
     
     <select id="complaintDropdown" class="hidden" onchange="handleComplaintChange()">
       <option value="">Select Issue...</option>
       <option value="Internet not working">Internet not working</option>
       <option value="Landline not working">Landline not working</option>
+      <option value="OTT apps not working">OTT apps not working</option>
       <option value="Redlight blinking on router">Redlight blinking on router</option>
       <option value="Power not showing on router">Power not showing on router</option>
       <option value="Others">Others</option>
@@ -122,10 +123,16 @@ function handleType() {
     msgLabel.innerHTML = 'Select Issue <span class="req">*</span>';
     complaintDropdown.classList.remove("hidden");
     messageText.classList.add("hidden"); 
-  } else if (type === "Feedback" || type === "Suggestion") {
+  } else if (type === "Feedback") {
     msgLabel.innerHTML = 'Your Message <span class="req">*</span>';
     complaintDropdown.classList.add("hidden");
     messageText.classList.remove("hidden");
+    messageText.placeholder = "Tell us about your experience with our service or technician...";
+  } else if (type === "Suggestion") {
+    msgLabel.innerHTML = 'Your Message <span class="req">*</span>';
+    complaintDropdown.classList.add("hidden");
+    messageText.classList.remove("hidden");
+    messageText.placeholder = "How can we improve? (e.g. New plans, new areas, app features)...";
   } else {
     msgLabel.innerHTML = 'Message <span class="req">*</span>';
     complaintDropdown.classList.add("hidden");
