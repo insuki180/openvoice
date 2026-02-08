@@ -151,6 +151,8 @@ function handleComplaintChange() {
   }
 }
 
+/* REPLACE YOUR OLD submitForm FUNCTION WITH THIS NEW ONE */
+
 function submitForm() {
   const type = document.getElementById("requestType").value;
   const name = document.getElementById("userName").value.trim();
@@ -158,6 +160,7 @@ function submitForm() {
   const mobile = document.getElementById("mobile").value.trim();
   const email = document.getElementById("email").value.trim();
   
+  // Message Logic
   let finalMessage = "";
   const dropdownVal = document.getElementById("complaintDropdown").value;
   const textVal = document.getElementById("messageText").value.trim();
@@ -173,32 +176,75 @@ function submitForm() {
     finalMessage = textVal;
   }
 
+  // Validation
   if (!type || !name) { alert("Please fill all required fields (marked with *)."); return; }
   if ((type === "Complaint" || type === "Feedback") && !mobile && !email) {
     alert("Please provide Registered Mobile Number or Email.");
     return;
   }
 
-  const payload = {
-    requestType: type, name: name, location: location, mobile: mobile, email: email,
-    message: finalMessage, attachments: "", clientName: CLIENT.name, clientId: CLIENT.clientId
-  };
-
+  // UI Updates
   const btn = document.querySelector("button");
   const originalText = btn.innerText;
   btn.innerText = "Submitting...";
   btn.disabled = true;
 
-  fetch(SCRIPT_URL, {
-    method: "POST", body: JSON.stringify(payload)
-  }).then(res => res.json()).then(data => {
-    if (data.success) showSuccess(type);
-    else { alert("Submission failed. Please try again."); btn.innerText = originalText; btn.disabled = false; }
-  }).catch(() => {
-    alert("Network error. Please try again."); btn.innerText = originalText; btn.disabled = false;
-  });
-}
+  // --- NEW IMAGE HANDLING LOGIC ---
+  const fileInput = document.getElementById("image");
+  
+  // Helper function to actually send the data
+  const sendData = (base64Data, mimeType) => {
+    const payload = {
+      requestType: type,
+      name: name,
+      location: location,
+      mobile: mobile,
+      email: email,
+      message: finalMessage,
+      // If we have an image, send object. If not, send empty string.
+      image: base64Data ? { data: base64Data, mimeType: mimeType } : null,
+      clientName: CLIENT.name,
+      clientId: CLIENT.clientId
+    };
 
+    fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        showSuccess(type);
+      } else {
+        alert("Submission failed. Please try again.");
+        btn.innerText = originalText;
+        btn.disabled = false;
+      }
+    })
+    .catch(() => {
+      alert("Network error. Please try again.");
+      btn.innerText = originalText;
+      btn.disabled = false;
+    });
+  };
+
+  // Check if file exists
+  if (fileInput.files.length > 0) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      // e.target.result looks like "data:image/jpeg;base64,/9j/4AAQSw..."
+      const raw = e.target.result;
+      const base64Data = raw.split(",")[1]; // Get the data part
+      const mimeType = raw.split(";")[0].split(":")[1]; // Get the type (e.g. image/jpeg)
+      sendData(base64Data, mimeType);
+    };
+    reader.readAsDataURL(fileInput.files[0]);
+  } else {
+    // No file, just send null
+    sendData(null, null);
+  }
+}
+  
 function showSuccess(type) {
   document.getElementById("formBox").classList.add("hidden");
   document.getElementById("successBox").classList.remove("hidden");
@@ -219,4 +265,5 @@ function showSuccess(type) {
 </script>
 </body>
 </html>
+
 
