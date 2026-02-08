@@ -11,7 +11,6 @@ body {
   background: #f6f7f9;
   padding: 20px;
 }
-
 .container {
   max-width: 420px;
   margin: auto;
@@ -19,121 +18,49 @@ body {
   padding: 20px;
   border-radius: 10px;
 }
-
-h2 {
-  text-align: center;
-  margin-bottom: 6px;
-}
-
-.sub {
-  text-align: center;
-  font-size: 13px;
-  color: #666;
-  margin-bottom: 20px;
-}
-
-label {
-  font-weight: 600;
-  margin-top: 14px;
-  display: block;
-}
-
-input, select, textarea {
-  width: 100%;
-  padding: 10px;
-  margin-top: 6px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 14px;
-}
-
-textarea {
-  min-height: 90px;
-}
-
-.helper {
-  font-size: 12px;
-  color: #666;
-}
-
-.hidden {
-  display: none;
-}
-
-button {
-  width: 100%;
-  margin-top: 20px;
-  padding: 12px;
-  border: none;
-  background: #1e88e5;
-  color: #fff;
-  border-radius: 8px;
-  font-size: 15px;
-  cursor: pointer;
-}
-
-/* Success screen */
-.success {
-  text-align: center;
-  padding: 30px 10px;
-}
+h2 { text-align: center; margin-bottom: 6px; }
+.sub { text-align: center; font-size: 13px; color: #666; margin-bottom: 20px; }
+label { font-weight: 600; margin-top: 14px; display: block; }
+.req { color: #d32f2f; margin-left: 2px; }
+input, select, textarea { width: 100%; padding: 10px; margin-top: 6px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; }
+textarea { min-height: 90px; }
+.helper { font-size: 12px; color: #666; margin-top: 4px; }
+.hidden { display: none; }
+button { width: 100%; margin-top: 20px; padding: 12px; border: none; background: #1e88e5; color: #fff; border-radius: 8px; font-size: 15px; cursor: pointer; }
+.success { text-align: center; padding: 30px 10px; }
 </style>
 </head>
 
 <body>
-
 <div class="container" id="app">
-  <div style="text-align:center; padding:60px 10px; color:#888;">
-    Loading OpenVoice…
-  </div>
+  <div style="text-align:center; padding:60px 10px; color:#888;">Loading OpenVoice…</div>
 </div>
 
 <script>
-/* ==================================================
-   CLIENT CONFIG  (Scan2Print-style)
-================================================== */
+/* CLIENT CONFIG */
 const CLIENT_CONFIG = {
-  "GVL001": {
-    name: "GVLC COMMUNICATIONS",
-    clientId: "GVL-ISP-001",
-    scriptUrl: "https://script.google.com/macros/s/AKfycbxnVFfCudI6OyZwoGGHG5YNuNJ4EpiePXOBlijtbU8qbQXH6XcSHhfm_NPDbZeUndxTxg/exec"
-  },
-  "FIT001": {
-    name: "FitZone Gym",
-    clientId: "FIT-GYM-001",
-    scriptUrl: ""
-  }
+  "GVL001": { name: "GVLC COMMUNICATIONS", clientId: "GVL-ISP-001", scriptUrl: "https://script.google.com/macros/s/AKfycbxnVFfCudI6OyZwoGGHG5YNuNJ4EpiePXOBlijtbU8qbQXH6XcSHhfm_NPDbZeUndxTxg/exec" },
+  "FIT001": { name: "FitZone Gym", clientId: "FIT-GYM-001", scriptUrl: "" }
 };
 
-/* ==================================================
-   CLIENT ROUTING
-================================================== */
 const params = new URLSearchParams(window.location.search);
 const clientKey = params.get("client");
 const app = document.getElementById("app");
 
 if (!clientKey || !CLIENT_CONFIG[clientKey]) {
-  app.innerHTML = `
-    <div style="text-align:center; padding:60px 20px;">
-      <h2>Invalid QR Code</h2>
-      <p>This link is not assigned to any client.</p>
-    </div>
-  `;
+  app.innerHTML = `<div style="text-align:center; padding:60px 20px;"><h2>Invalid QR Code</h2><p>This link is not assigned to any client.</p></div>`;
   throw new Error("Invalid client");
 }
 
 const CLIENT = CLIENT_CONFIG[clientKey];
 const SCRIPT_URL = CLIENT.scriptUrl;
 
-/* ==================================================
-   RENDER FORM
-================================================== */
 app.innerHTML = `
   <div id="formBox">
     <h2>${CLIENT.name}</h2>
     <div class="sub">Raise a complaint, feedback, or suggestion</div>
 
-    <label>Request Type</label>
+    <label>Request Type <span class="req">*</span></label>
     <select id="requestType" onchange="handleType()" required>
       <option value="">Select</option>
       <option value="Complaint">Complaint</option>
@@ -141,20 +68,31 @@ app.innerHTML = `
       <option value="Suggestion">Suggestion</option>
     </select>
 
-    <label>Your Name</label>
+    <label>Your Name <span class="req">*</span></label>
     <input id="userName" type="text" required>
 
-    <label>WhatsApp Number</label>
-    <input id="whatsapp" type="tel" placeholder="9XXXXXXXXX">
-    <div class="helper">
-      At least one contact method required for Complaint & Feedback
-    </div>
+    <label>Location / Area</label>
+    <input id="userLocation" type="text" placeholder="e.g. Street Name, Flat No">
+
+    <label>Registered Mobile Number</label>
+    <input id="mobile" type="tel" placeholder="Enter your 10-digit number">
+    <div class="helper"><span class="req">*</span> At least one contact method (Mobile or Email) is required for Complaint & Feedback</div>
 
     <label>Email Address</label>
     <input id="email" type="email">
 
-    <label id="msgLabel">Your Message</label>
-    <textarea id="message" required></textarea>
+    <label id="msgLabel">Message <span class="req">*</span></label>
+    
+    <select id="complaintDropdown" class="hidden" onchange="handleComplaintChange()">
+      <option value="">Select Issue...</option>
+      <option value="Internet not working">Internet not working</option>
+      <option value="Landline not working">Landline not working</option>
+      <option value="Redlight blinking on router">Redlight blinking on router</option>
+      <option value="Power not showing on router">Power not showing on router</option>
+      <option value="Others">Others</option>
+    </select>
+
+    <textarea id="messageText" class="hidden" placeholder="Type your details here..."></textarea>
 
     <div id="imgBlock" class="hidden">
       <label>Upload Image (optional)</label>
@@ -170,69 +108,93 @@ app.innerHTML = `
   </div>
 `;
 
-/* ==================================================
-   LOGIC (UNCHANGED)
-================================================== */
 function handleType() {
   const type = document.getElementById("requestType").value;
   const imgBlock = document.getElementById("imgBlock");
   const msgLabel = document.getElementById("msgLabel");
+  const complaintDropdown = document.getElementById("complaintDropdown");
+  const messageText = document.getElementById("messageText");
 
+  complaintDropdown.value = ""; messageText.value = "";
   imgBlock.classList.toggle("hidden", type !== "Complaint");
 
-  msgLabel.innerText =
-    type === "Complaint" ? "Describe your issue" :
-    type === "Feedback" ? "Share your feedback" :
-    "Share your suggestion";
+  if (type === "Complaint") {
+    msgLabel.innerHTML = 'Select Issue <span class="req">*</span>';
+    complaintDropdown.classList.remove("hidden");
+    messageText.classList.add("hidden"); 
+  } else if (type === "Feedback" || type === "Suggestion") {
+    msgLabel.innerHTML = 'Your Message <span class="req">*</span>';
+    complaintDropdown.classList.add("hidden");
+    messageText.classList.remove("hidden");
+  } else {
+    msgLabel.innerHTML = 'Message <span class="req">*</span>';
+    complaintDropdown.classList.add("hidden");
+    messageText.classList.add("hidden");
+  }
+}
+
+function handleComplaintChange() {
+  const dropdown = document.getElementById("complaintDropdown");
+  const textBox = document.getElementById("messageText");
+  if (dropdown.value === "Others") {
+    textBox.classList.remove("hidden");
+    textBox.placeholder = "Please describe your problem...";
+  } else {
+    textBox.classList.add("hidden");
+  }
 }
 
 function submitForm() {
   const type = document.getElementById("requestType").value;
   const name = document.getElementById("userName").value.trim();
-  const whatsapp = document.getElementById("whatsapp").value.trim();
+  const location = document.getElementById("userLocation").value.trim();
+  const mobile = document.getElementById("mobile").value.trim();
   const email = document.getElementById("email").value.trim();
-  const message = document.getElementById("message").value.trim();
+  
+  let finalMessage = "";
+  const dropdownVal = document.getElementById("complaintDropdown").value;
+  const textVal = document.getElementById("messageText").value.trim();
 
-  if (!type || !name || !message) {
-    alert("Please fill all required fields.");
-    return;
+  if (type === "Complaint") {
+    if (!dropdownVal) { alert("Please select an issue."); return; }
+    if (dropdownVal === "Others") {
+       if (!textVal) { alert("Please type your problem description."); return; }
+       finalMessage = "Other: " + textVal;
+    } else { finalMessage = dropdownVal; }
+  } else {
+    if (!textVal) { alert("Please enter your message."); return; }
+    finalMessage = textVal;
   }
 
-  if ((type === "Complaint" || type === "Feedback") && !whatsapp && !email) {
-    alert("Please provide WhatsApp or Email.");
+  if (!type || !name) { alert("Please fill all required fields (marked with *)."); return; }
+  if ((type === "Complaint" || type === "Feedback") && !mobile && !email) {
+    alert("Please provide Registered Mobile Number or Email.");
     return;
   }
 
   const payload = {
-    requestType: type,
-    name: name,
-    whatsapp: whatsapp,
-    email: email,
-    message: message,
-    attachments: "",
-    clientName: CLIENT.name,
-    clientId: CLIENT.clientId
+    requestType: type, name: name, location: location, mobile: mobile, email: email,
+    message: finalMessage, attachments: "", clientName: CLIENT.name, clientId: CLIENT.clientId
   };
 
+  const btn = document.querySelector("button");
+  const originalText = btn.innerText;
+  btn.innerText = "Submitting...";
+  btn.disabled = true;
+
   fetch(SCRIPT_URL, {
-    method: "POST",
-    body: JSON.stringify(payload)
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
-      showSuccess(type);
-    } else {
-      alert("Submission failed. Please try again.");
-    }
-  })
-  .catch(() => alert("Network error. Please try again."));
+    method: "POST", body: JSON.stringify(payload)
+  }).then(res => res.json()).then(data => {
+    if (data.success) showSuccess(type);
+    else { alert("Submission failed. Please try again."); btn.innerText = originalText; btn.disabled = false; }
+  }).catch(() => {
+    alert("Network error. Please try again."); btn.innerText = originalText; btn.disabled = false;
+  });
 }
 
 function showSuccess(type) {
   document.getElementById("formBox").classList.add("hidden");
   document.getElementById("successBox").classList.remove("hidden");
-
   const title = document.getElementById("sTitle");
   const msg = document.getElementById("sMsg");
 
@@ -248,6 +210,5 @@ function showSuccess(type) {
   }
 }
 </script>
-
 </body>
 </html>
